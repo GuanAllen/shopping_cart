@@ -1,42 +1,5 @@
 require 'rails_helper'
 
-class Cart
-  attr_reader :items
-
-  def initialize
-    @items = []
-  end
-
-  def add_item(product_id)
-    # 檢查是否有重複
-    item = items.find{ |i| i.product_id == product_id}
-
-    if item
-      # 有的話，數量加
-      item.increment(1)
-    else
-      # 沒有的話，加入items
-      @items << CartItem.new(product_id)
-    end
-  end
-
-  def empty?
-    items.empty?
-  end
-end
-
-class CartItem
-  attr_reader :product_id, :quantity
-  def initialize(product_id, quantity = 1)
-    @product_id = product_id
-    @quantity = quantity
-  end
-
-  def increment(n)
-    @quantity += n
-  end
-end
-
 RSpec.describe Cart, type: :model do
   describe "購物車基本功能" do
     it "可以新增商品到購物車裡，然後購物車裡就有東西了" do
@@ -56,9 +19,30 @@ RSpec.describe Cart, type: :model do
         cart.add_item(3)
       }
       expect(cart.items.count).to be 2
+      expect(cart.items.first.quantity).to be 3
     end
-    #* 商品可以放到購物車裡，也可以再拿出來
-    #* 可以計算整個購物車的總消費金額
+
+    it "商品可以放到購物車裡，也可以再拿出來" do
+      p1 = Product.create(title:'aaa', price:100)
+
+      cart = Cart.new
+      cart.add_item(p1.id)
+      expect(cart.items.first.product_id).to be p1.id
+      expect(cart.items.first.product).to be_a Product
+    end
+
+    it "可以計算整個購物車的總消費金額" do
+      p1 = Product.create(title:'aaa', price:100)
+      p2 = Product.create(title:'aaa', price:50)
+
+      cart = Cart.new
+      3.times { cart.add_item(p1.id) }
+      5.times { cart.add_item(p2.id) }
+
+      expect(cart.items.first.total_price).to be 300
+      expect(cart.items.last.total_price).to be 250
+      expect(cart.total_price).to be 550
+    end
   end
 
   describe "購物車進階功能" do
