@@ -1,13 +1,39 @@
 require 'rails_helper'
 
 class Cart
-  def add_item(product_id)
+  attr_reader :items
+
+  def initialize
     @items = []
-    @items << product_id
+  end
+
+  def add_item(product_id)
+    # 檢查是否有重複
+    item = items.find{ |i| i.product_id == product_id}
+
+    if item
+      # 有的話，數量加
+      item.increment(1)
+    else
+      # 沒有的話，加入items
+      @items << CartItem.new(product_id)
+    end
   end
 
   def empty?
-    @items.empty?
+    items.empty?
+  end
+end
+
+class CartItem
+  attr_reader :product_id, :quantity
+  def initialize(product_id, quantity = 1)
+    @product_id = product_id
+    @quantity = quantity
+  end
+
+  def increment(n)
+    @quantity += n
   end
 end
 
@@ -18,9 +44,19 @@ RSpec.describe Cart, type: :model do
       cart.add_item(1)
       #expect(cart.empty!).to be false
       expect(cart).not_to be_empty
+      expect(cart.items.count).to be 1
     end
-    #* 可以新增商品到購物車裡，然後購物車裡就有東西了
-    #* 如果加了相同種類的商品，購買項目(CartItem)並不會增加，但數量會改變。
+
+    it "如果加了相同種類的商品，購買項目(CartItem)並不會增加，但數量會改變" do
+      cart = Cart.new
+      3.times {
+        cart.add_item(1)
+      }
+      5.times {
+        cart.add_item(3)
+      }
+      expect(cart.items.count).to be 2
+    end
     #* 商品可以放到購物車裡，也可以再拿出來
     #* 可以計算整個購物車的總消費金額
   end
