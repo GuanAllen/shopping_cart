@@ -1,10 +1,21 @@
 require 'rails_helper'
 
+class Cart
+  def add_item(product_id)
+    @items = []
+    @items << product_id
+  end
+
+  def empty?
+    @items.empty?
+  end
+end
+
 RSpec.describe Cart, type: :model do
   describe "購物車基本功能" do
     it "可以新增商品到購物車裡，然後購物車裡就有東西了" do
       cart = Cart.new
-      cart.add_cart(1)
+      cart.add_item(1)
       #expect(cart.empty!).to be false
       expect(cart).not_to be_empty
     end
